@@ -20,6 +20,10 @@ class SamplerRepositoryImpl(
         dao.updatePad(pad.toEntity())
     }
 
+    override suspend fun updateAllPads(pads: List<Pad>) {
+        dao.insertAll(pads.map { it.toEntity() })
+    }
+
     override suspend fun initializePads() {
         if (dao.getPadCount() > 0) return
         val pads = (0 until 16).map { pos ->

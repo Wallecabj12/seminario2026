@@ -13,13 +13,18 @@ class FakeAuthRepository : AuthRepository {
     companion object {
         private const val SIMULATED_DELAY_MS = 1_500L
         private const val ERROR_TEST_EMAIL = "error@test.com"
+        @Volatile
+        var currentUserSession: String? = null
     }
+
+    override fun getCurrentUserId(): String? = currentUserSession
 
     override suspend fun login(email: String, password: String): AuthResult {
         delay(SIMULATED_DELAY_MS)
         return if (email.equals(ERROR_TEST_EMAIL, ignoreCase = true)) {
             AuthResult.Error("Credenciales incorrectas. Verifica tu email y contraseña.")
         } else {
+            currentUserSession = email.trim()
             AuthResult.Success
         }
     }
@@ -29,6 +34,7 @@ class FakeAuthRepository : AuthRepository {
         return if (email.equals(ERROR_TEST_EMAIL, ignoreCase = true)) {
             AuthResult.Error("Este email ya está registrado.")
         } else {
+            currentUserSession = email.trim()
             AuthResult.Success
         }
     }
