@@ -6,6 +6,9 @@ data class Pad(
     val filePath: String? = null,
     val category: PadCategory = PadCategory.OTHER,
     val position: Int = 0,
+    val volume: Float = 1.0f,
+    val isLoop: Boolean = false,
+    val rate: Float = 1.0f,
 ) {
     val hasSound: Boolean get() = filePath != null
 }

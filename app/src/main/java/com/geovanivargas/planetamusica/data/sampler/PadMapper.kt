@@ -9,6 +9,9 @@ fun PadEntity.toDomain() = Pad(
     filePath = filePath,
     category = runCatching { PadCategory.valueOf(category) }.getOrDefault(PadCategory.OTHER),
     position = position,
+    volume = volume,
+    isLoop = isLoop,
+    rate = rate,
 )
 
 fun Pad.toEntity() = PadEntity(
@@ -17,4 +20,7 @@ fun Pad.toEntity() = PadEntity(
     filePath = filePath,
     category = category.name,
     position = position,
+    volume = volume,
+    isLoop = isLoop,
+    rate = rate,
 )
