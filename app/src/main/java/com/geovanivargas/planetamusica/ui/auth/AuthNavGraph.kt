@@ -5,64 +5,63 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
 
 /**
- * Rutas de navegación de autenticación.
+ * Rutas de navegación de la app.
  */
-object AuthRoutes {
+object AppRoutes {
+    const val SAMPLER = "sampler"
     const val LOGIN = "login"
     const val SIGN_UP = "sign_up"
     const val RECOVERY = "recovery"
-    const val HOME = "home" // Placeholder – se reemplazará por la pantalla principal del sampler
 }
 
 @Composable
 fun AuthNavGraph(
     navController: NavHostController = rememberNavController(),
 ) {
-    NavHost(navController = navController, startDestination = AuthRoutes.LOGIN) {
+    NavHost(navController = navController, startDestination = AppRoutes.SAMPLER) {
 
-        composable(AuthRoutes.LOGIN) {
-            LoginScreen(
-                onNavigateToSignUp = {
-                    navController.navigate(AuthRoutes.SIGN_UP)
-                },
-                onNavigateToRecovery = {
-                    navController.navigate(AuthRoutes.RECOVERY)
-                },
-                onLoginSuccess = {
-                    navController.navigate(AuthRoutes.HOME) {
-                        popUpTo(AuthRoutes.LOGIN) { inclusive = true }
-                    }
-                },
-                onContinueWithoutAccount = {
-                    navController.navigate(AuthRoutes.HOME) {
-                        popUpTo(AuthRoutes.LOGIN) { inclusive = true }
-                    }
+        // Pantalla principal – el sampler
+        composable(AppRoutes.SAMPLER) {
+            SamplerScreen(
+                onNavigateToLogin = {
+                    navController.navigate(AppRoutes.LOGIN)
                 },
             )
         }
 
-        composable(AuthRoutes.SIGN_UP) {
+        composable(AppRoutes.LOGIN) {
+            LoginScreen(
+                onNavigateToSignUp = {
+                    navController.navigate(AppRoutes.SIGN_UP)
+                },
+                onNavigateToRecovery = {
+                    navController.navigate(AppRoutes.RECOVERY)
+                },
+                onLoginSuccess = {
+                    navController.popBackStack(AppRoutes.SAMPLER, inclusive = false)
+                },
+                onContinueWithoutAccount = {
+                    navController.popBackStack(AppRoutes.SAMPLER, inclusive = false)
+                },
+            )
+        }
+
+        composable(AppRoutes.SIGN_UP) {
             SignUpScreen(
                 onNavigateToLogin = { navController.popBackStack() },
                 onSignUpSuccess = {
-                    navController.navigate(AuthRoutes.HOME) {
-                        popUpTo(AuthRoutes.LOGIN) { inclusive = true }
-                    }
+                    navController.popBackStack(AppRoutes.SAMPLER, inclusive = false)
                 },
             )
         }
 
-        composable(AuthRoutes.RECOVERY) {
+        composable(AppRoutes.RECOVERY) {
             RecoveryScreen(
                 onNavigateToLogin = { navController.popBackStack() },
             )
-        }
-
-        // Placeholder home – se implementará en iteraciones futuras
-        composable(AuthRoutes.HOME) {
-            HomePlaceholder()
         }
     }
 }
