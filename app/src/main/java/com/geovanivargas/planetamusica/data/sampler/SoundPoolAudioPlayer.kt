@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
 import com.geovanivargas.planetamusica.domain.sampler.AudioPlayer
+import com.geovanivargas.planetamusica.domain.sampler.Pad
 
 class SoundPoolAudioPlayer(context: Context) : AudioPlayer {
 
@@ -17,9 +18,10 @@ class SoundPoolAudioPlayer(context: Context) : AudioPlayer {
         )
         .build()
 
-    private val soundIdMap = mutableMapOf<Int, Int>()   // padId → soundPoolSoundId
-    private val streamIdMap = mutableMapOf<Int, Int>()   // padId → streamId
-    private val loadedSounds = mutableSetOf<Int>()       // soundPoolSoundIds ready
+    private val soundIdMap = mutableMapOf<Int, Int>()     // padId -> soundPoolSoundId
+    private val streamIdMap = mutableMapOf<Int, Int>()    // padId -> streamId
+    private val loadedSounds = mutableSetOf<Int>()         // soundPoolSoundIds ready
+    private val activeLoops = mutableSetOf<Int>()          // padIds currently looping
 
     init {
         soundPool.setOnLoadCompleteListener { _, soundId, status ->
@@ -36,20 +38,47 @@ class SoundPoolAudioPlayer(context: Context) : AudioPlayer {
         } else false
     }
 
-    override fun play(padId: Int) {
-        val soundId = soundIdMap[padId] ?: return
+    override fun play(pad: Pad) {
+        val soundId = soundIdMap[pad.id] ?: return
         if (soundId !in loadedSounds) return
-        val streamId = soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
-        if (streamId != 0) streamIdMap[padId] = streamId
+
+        if (pad.isLoop && activeLoops.contains(pad.id)) {
+            stop(pad.id)
+            return
+        }
+
+        streamIdMap[pad.id]?.let { soundPool.stop(it) }
+
+        val loopCount = if (pad.isLoop) -1 else 0
+        val clampedVolume = pad.volume.coerceIn(0f, 1f)
+        val clampedRate = pad.rate.coerceIn(0.5f, 2.0f)
+
+        val streamId = soundPool.play(soundId, clampedVolume, clampedVolume, 1, loopCount, clampedRate)
+        if (streamId != 0) {
+            streamIdMap[pad.id] = streamId
+            if (pad.isLoop) {
+                activeLoops.add(pad.id)
+            }
+        }
+    }
+
+    override fun stop(padId: Int) {
+        streamIdMap.remove(padId)?.let { soundPool.stop(it) }
+        activeLoops.remove(padId)
     }
 
     override fun stopAll() {
         streamIdMap.values.forEach { soundPool.stop(it) }
         streamIdMap.clear()
+        activeLoops.clear()
     }
 
+    override fun isLooping(padId: Int): Boolean = padId in activeLoops
+
+    override fun getActiveLoops(): Set<Int> = activeLoops.toSet()
+
     override fun unload(padId: Int) {
-        streamIdMap.remove(padId)?.let { soundPool.stop(it) }
+        stop(padId)
         soundIdMap.remove(padId)?.let {
             soundPool.unload(it)
             loadedSounds.remove(it)
@@ -61,5 +90,6 @@ class SoundPoolAudioPlayer(context: Context) : AudioPlayer {
         soundIdMap.clear()
         streamIdMap.clear()
         loadedSounds.clear()
+        activeLoops.clear()
     }
 }
