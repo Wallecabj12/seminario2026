@@ -1,10 +1,13 @@
 package com.geovanivargas.planetamusica.ui.sampler
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,10 +22,11 @@ import androidx.compose.ui.unit.dp
 fun PlaybackBar(
     activePadName: String?,
     isPlaying: Boolean,
+    activeLoopsCount: Int,
     onStopAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (!isPlaying || activePadName == null) return
+    if (!isPlaying && activeLoopsCount == 0 && activePadName == null) return
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -36,14 +40,27 @@ fun PlaybackBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = "▶  $activePadName",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                if (activePadName != null) {
+                    Text(
+                        text = "▶  $activePadName",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (activeLoopsCount > 0) {
+                    Text(
+                        text = "🔁 Loops activos: $activeLoopsCount",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
             Button(
                 onClick = onStopAll,
                 modifier = Modifier.height(40.dp),
