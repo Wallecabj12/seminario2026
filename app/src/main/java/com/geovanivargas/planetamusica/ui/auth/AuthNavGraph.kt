@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.geovanivargas.planetamusica.ui.presets.PresetsScreen
 import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
 
 /**
@@ -12,6 +13,7 @@ import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
  */
 object AppRoutes {
     const val SAMPLER = "sampler"
+    const val PRESETS = "presets"
     const val LOGIN = "login"
     const val SIGN_UP = "sign_up"
     const val RECOVERY = "recovery"
@@ -29,6 +31,16 @@ fun AuthNavGraph(
                 onNavigateToLogin = {
                     navController.navigate(AppRoutes.LOGIN)
                 },
+                onNavigateToPresets = {
+                    navController.navigate(AppRoutes.PRESETS)
+                },
+            )
+        }
+
+        // Pantalla de presets
+        composable(AppRoutes.PRESETS) {
+            PresetsScreen(
+                onNavigateBack = { navController.popBackStack() },
             )
         }
 

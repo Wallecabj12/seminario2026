@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -18,7 +17,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -33,12 +31,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geovanivargas.planetamusica.data.sampler.FileManager
-import com.geovanivargas.planetamusica.domain.sampler.PadCategory
+import com.geovanivargas.planetamusica.ui.padsettings.PadSettingsSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SamplerScreen(
     onNavigateToLogin: () -> Unit,
+    onNavigateToPresets: () -> Unit,
     viewModel: SamplerViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -54,36 +53,19 @@ fun SamplerScreen(
         pendingPadId = -1
     }
 
-    // Mostrar mensajes
+    LaunchedEffect(state.requestFilePickerForPadId) {
+        state.requestFilePickerForPadId?.let { padId ->
+            pendingPadId = padId
+            viewModel.onEvent(SamplerEvent.FilePickerConsumed)
+            filePicker.launch(arrayOf("audio/mpeg", "audio/wav", "audio/x-wav"))
+        }
+    }
+
     LaunchedEffect(state.message) {
         state.message?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.onEvent(SamplerEvent.ClearMessage)
         }
-    }
-
-    // Diálogo de categoría tras asignar sonido
-    state.showCategoryDialogForPad?.let { padId ->
-        AlertDialog(
-            onDismissRequest = { viewModel.onEvent(SamplerEvent.DismissCategoryDialog) },
-            title = { Text("Categoría del pad") },
-            text = {
-                Column {
-                    PadCategory.assignable.forEach { cat ->
-                        TextButton(onClick = {
-                            viewModel.onEvent(SamplerEvent.CategoryAssigned(padId, cat))
-                        }) {
-                            Text(cat.label)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { viewModel.onEvent(SamplerEvent.DismissCategoryDialog) }) {
-                    Text("Omitir")
-                }
-            },
-        )
     }
 
     Scaffold(
@@ -96,6 +78,13 @@ fun SamplerScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
+                    IconButton(onClick = onNavigateToPresets) {
+                        Icon(
+                            painter = painterResource(android.R.drawable.ic_menu_save),
+                            contentDescription = "Presets",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     IconButton(onClick = onNavigateToLogin) {
                         Icon(
                             painter = painterResource(android.R.drawable.ic_menu_myplaces),
@@ -110,6 +99,7 @@ fun SamplerScreen(
             PlaybackBar(
                 activePadName = state.activePadName,
                 isPlaying = state.isPlaying,
+                activeLoopsCount = state.activeLoopsCount,
                 onStopAll = { viewModel.onEvent(SamplerEvent.StopAll) },
             )
         },
@@ -119,13 +109,11 @@ fun SamplerScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            // Filtros de categoría
             CategoryChips(
                 selected = state.selectedFilter,
                 onSelected = { viewModel.onEvent(SamplerEvent.CategoryFilterSelected(it)) },
             )
 
-            // Indicador de almacenamiento
             LinearProgressIndicator(
                 progress = {
                     (state.storageUsedBytes.toFloat() / FileManager.MAX_TOTAL_SIZE_BYTES).coerceIn(0f, 1f)
@@ -145,17 +133,20 @@ fun SamplerScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Grid de pads
             PadGrid(
                 pads = state.filteredPads,
                 activePadName = state.activePadName,
                 onPadTap = { viewModel.onEvent(SamplerEvent.PadTapped(it)) },
                 onPadLongPress = { padId ->
-                    pendingPadId = padId
-                    filePicker.launch(arrayOf("audio/mpeg", "audio/wav", "audio/x-wav"))
+                    viewModel.onEvent(SamplerEvent.PadLongPressed(padId))
                 },
                 modifier = Modifier.weight(1f),
             )
         }
     }
+
+    PadSettingsSheet(
+        state = state.padSettingsState,
+        onEvent = { viewModel.onEvent(SamplerEvent.PadSettingsEventReceived(it)) },
+    )
 }
