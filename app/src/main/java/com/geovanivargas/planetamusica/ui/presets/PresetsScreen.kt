@@ -44,7 +44,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresetsScreen(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: () -> Unit = {},
+    showTopBar: Boolean = true,
     viewModel: PresetsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -163,39 +164,67 @@ fun PresetsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("Presets") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_revert),
-                            contentDescription = "Volver",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.onEvent(PresetsEvent.OpenSaveDialog) }) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_input_add),
-                            contentDescription = "Guardar preset actual",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                },
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text("Presets") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_menu_revert),
+                                contentDescription = "Volver",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { viewModel.onEvent(PresetsEvent.OpenSaveDialog) }) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_input_add),
+                                contentDescription = "Guardar preset actual",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    },
+                )
+            }
         },
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            if (state.status is PresetsStatus.Loading) {
+            if (!showTopBar) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Gestión de Presets",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Button(
+                        onClick = { viewModel.onEvent(PresetsEvent.OpenSaveDialog) },
+                    ) {
+                        Text("+ Guardar actual")
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+            ) {
+                if (state.status is PresetsStatus.Loading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = MaterialTheme.colorScheme.primary,
@@ -302,4 +331,5 @@ fun PresetsScreen(
             }
         }
     }
+}
 }

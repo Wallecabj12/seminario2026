@@ -143,9 +143,9 @@ private class FakeTestPresetRepository : PresetRepository {
     override suspend fun getPresetById(id: Long): Preset? =
         presetsList.find { it.id == id }
 
-    override suspend fun savePreset(name: String, userId: String?, pads: List<Pad>): Long {
+    override suspend fun savePreset(name: String, userId: String?, pads: List<Pad>, patternData: String?): Long {
         val id = (presetsList.size + 1).toLong()
-        val preset = Preset(id = id, name = name, userId = userId, pads = pads)
+        val preset = Preset(id = id, name = name, userId = userId, pads = pads, patternData = patternData)
         presetsList.add(preset)
         flow.value = presetsList.toList()
         return id

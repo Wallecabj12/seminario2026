@@ -10,6 +10,7 @@ import com.geovanivargas.planetamusica.data.sampler.SoundCraftDatabase
 import com.geovanivargas.planetamusica.domain.presets.DeletePresetUseCase
 import com.geovanivargas.planetamusica.domain.presets.GetPresetsUseCase
 import com.geovanivargas.planetamusica.domain.presets.LoadPresetUseCase
+import com.geovanivargas.planetamusica.domain.presets.Preset
 import com.geovanivargas.planetamusica.domain.presets.RenamePresetUseCase
 import com.geovanivargas.planetamusica.domain.presets.SavePresetUseCase
 import com.geovanivargas.planetamusica.domain.sampler.SamplerRepository
@@ -106,6 +107,9 @@ class PresetsViewModel(
         }
     }
 
+    var currentPatternProvider: (() -> String?)? = null
+    var onPresetLoaded: ((Preset) -> Unit)? = null
+
     private fun saveCurrentPreset() {
         val name = _state.value.newPresetName.trim()
         if (name.isEmpty()) {
@@ -116,7 +120,8 @@ class PresetsViewModel(
         viewModelScope.launch {
             try {
                 val currentPads = samplerRepository.getAllPads().first()
-                savePresetUseCase(name, currentPads)
+                val patternData = currentPatternProvider?.invoke()
+                savePresetUseCase(name, currentPads, patternData)
                 _state.update {
                     it.copy(
                         status = PresetsStatus.Success("Preset '$name' guardado correctamente."),
@@ -136,7 +141,8 @@ class PresetsViewModel(
         _state.update { it.copy(status = PresetsStatus.Loading, presetToLoad = null) }
         viewModelScope.launch {
             try {
-                loadPresetUseCase(preset.id)
+                val loaded = loadPresetUseCase(preset.id)
+                onPresetLoaded?.invoke(loaded)
                 _state.update {
                     it.copy(status = PresetsStatus.Success("Preset '${preset.name}' cargado."))
                 }

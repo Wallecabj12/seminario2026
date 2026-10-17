@@ -9,4 +9,5 @@ data class PresetEntity(
     val name: String,
     val userId: String?, // null = preset local sin cuenta
     val createdAt: Long = System.currentTimeMillis(),
+    val patternData: String? = null,
 )

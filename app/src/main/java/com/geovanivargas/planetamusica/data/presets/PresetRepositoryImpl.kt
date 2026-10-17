@@ -19,11 +19,12 @@ class PresetRepositoryImpl(
     override suspend fun getPresetById(id: Long): Preset? =
         dao.getPresetWithPadsById(id)?.toDomain()
 
-    override suspend fun savePreset(name: String, userId: String?, pads: List<Pad>): Long {
+    override suspend fun savePreset(name: String, userId: String?, pads: List<Pad>, patternData: String?): Long {
         val presetEntity = PresetEntity(
             name = name,
             userId = userId,
             createdAt = System.currentTimeMillis(),
+            patternData = patternData,
         )
         val presetId = dao.insertPreset(presetEntity)
         val padEntities = pads.map { pad ->
@@ -69,6 +70,7 @@ class PresetRepositoryImpl(
             userId = preset.userId,
             createdAt = preset.createdAt,
             pads = domainPads,
+            patternData = preset.patternData,
         )
     }
 }

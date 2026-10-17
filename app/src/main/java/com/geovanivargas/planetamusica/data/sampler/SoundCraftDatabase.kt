@@ -45,9 +45,15 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `presets` ADD COLUMN `patternData` TEXT DEFAULT NULL")
+    }
+}
+
 @Database(
     entities = [PadEntity::class, PresetEntity::class, PresetPadEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class SoundCraftDatabase : RoomDatabase() {
@@ -66,7 +72,7 @@ abstract class SoundCraftDatabase : RoomDatabase() {
                     SoundCraftDatabase::class.java,
                     "soundcraft_db",
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }

@@ -8,6 +8,7 @@ data class Preset(
     val userId: String? = null, // null = local
     val createdAt: Long = System.currentTimeMillis(),
     val pads: List<Pad> = emptyList(),
+    val patternData: String? = null,
 ) {
     val isLocal: Boolean get() = userId == null
 }
