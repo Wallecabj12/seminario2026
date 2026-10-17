@@ -7,6 +7,7 @@ interface AudioPlayer {
     fun stopAll()
     fun unload(padId: Int)
     fun isLooping(padId: Int): Boolean
+    fun isSoundLoaded(padId: Int): Boolean
     fun getActiveLoops(): Set<Int>
     fun release()
 }
