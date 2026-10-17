@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.geovanivargas.planetamusica.ui.main.MainScreen
 import com.geovanivargas.planetamusica.ui.presets.PresetsScreen
 import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
 
@@ -25,19 +26,16 @@ fun AuthNavGraph(
 ) {
     NavHost(navController = navController, startDestination = AppRoutes.SAMPLER) {
 
-        // Pantalla principal – el sampler
+        // Pantalla principal DAW (Pads | Secuencia | Presets)
         composable(AppRoutes.SAMPLER) {
-            SamplerScreen(
+            MainScreen(
                 onNavigateToLogin = {
                     navController.navigate(AppRoutes.LOGIN)
-                },
-                onNavigateToPresets = {
-                    navController.navigate(AppRoutes.PRESETS)
                 },
             )
         }
 
-        // Pantalla de presets
+        // Pantalla de presets independiente
         composable(AppRoutes.PRESETS) {
             PresetsScreen(
                 onNavigateBack = { navController.popBackStack() },
