@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import com.geovanivargas.planetamusica.R
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -114,9 +115,9 @@ fun LoginScreen(
                         Icon(
                             painter = painterResource(
                                 id = if (state.passwordVisible)
-                                    android.R.drawable.ic_menu_view
+                                    R.drawable.ic_menu_view
                                 else
-                                    android.R.drawable.ic_secure,
+                                    R.drawable.ic_secure,
                             ),
                             contentDescription = if (state.passwordVisible)
                                 "Ocultar contraseña" else "Mostrar contraseña",

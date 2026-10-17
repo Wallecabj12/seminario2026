@@ -40,7 +40,7 @@ class PresetsViewModel(
         ),
         loadPresetUseCase = LoadPresetUseCase(
             PresetRepositoryImpl(SoundCraftDatabase.getInstance(application).presetDao()),
-            SamplerRepositoryImpl(SoundCraftDatabase.getInstance(application).padDao()),
+            SamplerRepositoryImpl(SoundCraftDatabase.getInstance(application).padDao(), application),
         ),
         deletePresetUseCase = DeletePresetUseCase(
             PresetRepositoryImpl(SoundCraftDatabase.getInstance(application).presetDao()),
@@ -48,8 +48,18 @@ class PresetsViewModel(
         renamePresetUseCase = RenamePresetUseCase(
             PresetRepositoryImpl(SoundCraftDatabase.getInstance(application).presetDao()),
         ),
-        samplerRepository = SamplerRepositoryImpl(SoundCraftDatabase.getInstance(application).padDao()),
+        samplerRepository = SamplerRepositoryImpl(SoundCraftDatabase.getInstance(application).padDao(), application),
     )
+
+    companion object {
+        fun provideFactory(application: Application): androidx.lifecycle.ViewModelProvider.Factory =
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return PresetsViewModel(application) as T
+                }
+            }
+    }
 
     private val _state = MutableStateFlow(PresetsUiState())
     val state: StateFlow<PresetsUiState> = _state.asStateFlow()

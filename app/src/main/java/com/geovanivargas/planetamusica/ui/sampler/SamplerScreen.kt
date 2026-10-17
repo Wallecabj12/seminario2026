@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geovanivargas.planetamusica.R
 import com.geovanivargas.planetamusica.data.sampler.FileManager
 import com.geovanivargas.planetamusica.ui.padsettings.PadSettingsSheet
 
@@ -82,14 +83,14 @@ fun SamplerScreen(
                     actions = {
                         IconButton(onClick = onNavigateToPresets) {
                             Icon(
-                                painter = painterResource(android.R.drawable.ic_menu_save),
+                                painter = painterResource(R.drawable.ic_btn_save),
                                 contentDescription = "Presets",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         IconButton(onClick = onNavigateToLogin) {
                             Icon(
-                                painter = painterResource(android.R.drawable.ic_menu_myplaces),
+                                painter = painterResource(R.drawable.ic_btn_myplaces),
                                 contentDescription = "Iniciar sesión",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )

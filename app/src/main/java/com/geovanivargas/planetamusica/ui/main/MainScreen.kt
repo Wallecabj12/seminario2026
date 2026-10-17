@@ -27,10 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import android.app.Application
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geovanivargas.planetamusica.R
 import com.geovanivargas.planetamusica.domain.presets.Preset
 import com.geovanivargas.planetamusica.domain.sequencer.StepPattern
 import com.geovanivargas.planetamusica.ui.presets.PresetsScreen
@@ -43,9 +46,9 @@ import com.geovanivargas.planetamusica.ui.sequencer.TransportBar
 import com.geovanivargas.planetamusica.ui.theme.Primary
 
 enum class DawTab(val title: String, val iconRes: Int) {
-    PADS("Pads", android.R.drawable.ic_dialog_dialer),
-    SEQUENCE("Secuencia", android.R.drawable.ic_media_play),
-    PRESETS("Presets", android.R.drawable.ic_menu_save),
+    PADS("Pads", R.drawable.ic_tab_pads),
+    SEQUENCE("Secuencia", R.drawable.ic_tab_sequence),
+    PRESETS("Presets", R.drawable.ic_tab_presets),
 }
 
 @Composable
@@ -53,7 +56,11 @@ fun MainScreen(
     onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier,
     sequencerViewModel: SequencerViewModel = viewModel(),
-    presetsViewModel: PresetsViewModel = viewModel(),
+    presetsViewModel: PresetsViewModel = viewModel(
+        factory = PresetsViewModel.provideFactory(
+            LocalContext.current.applicationContext as Application,
+        ),
+    ),
 ) {
     var selectedTab by remember { mutableStateOf(DawTab.PADS) }
     val sequencerState by sequencerViewModel.state.collectAsState()
@@ -100,7 +107,7 @@ fun MainScreen(
 
                     IconButton(onClick = onNavigateToLogin) {
                         Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_myplaces),
+                            painter = painterResource(R.drawable.ic_btn_myplaces),
                             contentDescription = "Iniciar sesión",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

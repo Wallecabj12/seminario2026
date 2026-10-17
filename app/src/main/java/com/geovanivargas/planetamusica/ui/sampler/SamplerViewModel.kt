@@ -65,7 +65,7 @@ class SamplerViewModel(application: Application) : AndroidViewModel(application)
     private val db = SoundCraftDatabase.getInstance(application)
     private val fileManager = FileManager(application)
     private val audioPlayer: AudioPlayer = SoundPoolAudioPlayer(application)
-    private val repo: SamplerRepository = SamplerRepositoryImpl(db.padDao())
+    private val repo: SamplerRepository = SamplerRepositoryImpl(db.padDao(), application)
 
     private val _state = MutableStateFlow(SamplerUiState())
     val state: StateFlow<SamplerUiState> = _state.asStateFlow()

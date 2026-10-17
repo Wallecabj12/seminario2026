@@ -34,19 +34,26 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import android.app.Application
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.geovanivargas.planetamusica.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresetsScreen(
     onNavigateBack: () -> Unit = {},
     showTopBar: Boolean = true,
-    viewModel: PresetsViewModel = viewModel(),
+    viewModel: PresetsViewModel = viewModel(
+        factory = PresetsViewModel.provideFactory(
+            LocalContext.current.applicationContext as Application,
+        ),
+    ),
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -174,7 +181,7 @@ fun PresetsScreen(
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(
-                                painter = painterResource(android.R.drawable.ic_menu_revert),
+                                painter = painterResource(R.drawable.ic_btn_revert),
                                 contentDescription = "Volver",
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
@@ -183,7 +190,7 @@ fun PresetsScreen(
                     actions = {
                         IconButton(onClick = { viewModel.onEvent(PresetsEvent.OpenSaveDialog) }) {
                             Icon(
-                                painter = painterResource(android.R.drawable.ic_input_add),
+                                painter = painterResource(R.drawable.ic_btn_add),
                                 contentDescription = "Guardar preset actual",
                                 tint = MaterialTheme.colorScheme.primary,
                             )
@@ -304,7 +311,7 @@ fun PresetsScreen(
                                         onClick = { viewModel.onEvent(PresetsEvent.RequestRenamePreset(preset)) },
                                     ) {
                                         Icon(
-                                            painter = painterResource(android.R.drawable.ic_menu_edit),
+                                            painter = painterResource(R.drawable.ic_btn_edit),
                                             contentDescription = "Renombrar",
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -313,7 +320,7 @@ fun PresetsScreen(
                                         onClick = { viewModel.onEvent(PresetsEvent.RequestDeletePreset(preset)) },
                                     ) {
                                         Icon(
-                                            painter = painterResource(android.R.drawable.ic_menu_delete),
+                                            painter = painterResource(R.drawable.ic_btn_delete),
                                             contentDescription = "Eliminar",
                                             tint = MaterialTheme.colorScheme.error,
                                         )
