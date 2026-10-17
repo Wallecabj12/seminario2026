@@ -38,6 +38,7 @@ import com.geovanivargas.planetamusica.ui.padsettings.PadSettingsSheet
 fun SamplerScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToPresets: () -> Unit,
+    showTopBar: Boolean = true,
     viewModel: SamplerViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -71,29 +72,31 @@ fun SamplerScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text("SoundCraft") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                actions = {
-                    IconButton(onClick = onNavigateToPresets) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_save),
-                            contentDescription = "Presets",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    IconButton(onClick = onNavigateToLogin) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_myplaces),
-                            contentDescription = "Iniciar sesión",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = { Text("SoundCraft") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    actions = {
+                        IconButton(onClick = onNavigateToPresets) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_menu_save),
+                                contentDescription = "Presets",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = onNavigateToLogin) {
+                            Icon(
+                                painter = painterResource(android.R.drawable.ic_menu_myplaces),
+                                contentDescription = "Iniciar sesión",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    },
+                )
+            }
         },
         bottomBar = {
             PlaybackBar(
@@ -139,6 +142,9 @@ fun SamplerScreen(
                 onPadTap = { viewModel.onEvent(SamplerEvent.PadTapped(it)) },
                 onPadLongPress = { padId ->
                     viewModel.onEvent(SamplerEvent.PadLongPressed(padId))
+                },
+                onImportSoundToPad = { padId ->
+                    viewModel.onEvent(SamplerEvent.FilePickerRequested(padId))
                 },
                 modifier = Modifier.weight(1f),
             )

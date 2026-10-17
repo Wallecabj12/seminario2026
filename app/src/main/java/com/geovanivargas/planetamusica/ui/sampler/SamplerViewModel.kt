@@ -49,6 +49,7 @@ data class SamplerUiState(
 sealed interface SamplerEvent {
     data class PadTapped(val padId: Int) : SamplerEvent
     data class PadLongPressed(val padId: Int) : SamplerEvent
+    data class FilePickerRequested(val padId: Int) : SamplerEvent
     data class FileSelected(val padId: Int, val uri: Uri) : SamplerEvent
     data class CategoryFilterSelected(val category: PadCategory) : SamplerEvent
     data class PadSettingsEventReceived(val event: PadSettingsEvent) : SamplerEvent
@@ -88,6 +89,8 @@ class SamplerViewModel(application: Application) : AndroidViewModel(application)
         when (event) {
             is SamplerEvent.PadTapped -> playPad(event.padId)
             is SamplerEvent.PadLongPressed -> openPadSettings(event.padId)
+            is SamplerEvent.FilePickerRequested ->
+                _state.update { it.copy(requestFilePickerForPadId = event.padId) }
             is SamplerEvent.FileSelected -> assignSound(event.padId, event.uri)
             is SamplerEvent.CategoryFilterSelected ->
                 _state.update { it.copy(selectedFilter = event.category) }
@@ -112,7 +115,7 @@ class SamplerViewModel(application: Application) : AndroidViewModel(application)
     private fun playPad(padId: Int) {
         val pad = _state.value.pads.find { it.id == padId } ?: return
         if (!pad.hasSound) {
-            _state.update { it.copy(message = "Mantén presionado para configurar o asignar un sonido.") }
+            _state.update { it.copy(message = "Mantén presionado para cargar un sonido.") }
             return
         }
         audioPlayer.play(pad)
