@@ -1,19 +1,26 @@
 package com.geovanivargas.planetamusica.ui.main
 
+import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,17 +32,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import android.app.Application
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geovanivargas.planetamusica.R
-import com.geovanivargas.planetamusica.domain.presets.Preset
 import com.geovanivargas.planetamusica.domain.sequencer.StepPattern
+import com.geovanivargas.planetamusica.ui.components.DawKnob
+import com.geovanivargas.planetamusica.ui.components.DawPanel
 import com.geovanivargas.planetamusica.ui.presets.PresetsScreen
 import com.geovanivargas.planetamusica.ui.presets.PresetsViewModel
 import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
@@ -43,12 +53,20 @@ import com.geovanivargas.planetamusica.ui.sequencer.SequencerEvent
 import com.geovanivargas.planetamusica.ui.sequencer.SequencerScreen
 import com.geovanivargas.planetamusica.ui.sequencer.SequencerViewModel
 import com.geovanivargas.planetamusica.ui.sequencer.TransportBar
-import com.geovanivargas.planetamusica.ui.theme.Primary
+import com.geovanivargas.planetamusica.ui.theme.DawAccentOrange
+import com.geovanivargas.planetamusica.ui.theme.DawDarkBackground
+import com.geovanivargas.planetamusica.ui.theme.DawLcdBackground
+import com.geovanivargas.planetamusica.ui.theme.DawLedGreen
+import com.geovanivargas.planetamusica.ui.theme.DawPanelBackground
+import com.geovanivargas.planetamusica.ui.theme.DawPanelBorder
+import com.geovanivargas.planetamusica.ui.theme.DawPanelHeader
+import com.geovanivargas.planetamusica.ui.theme.DawSurfaceVariant
 
-enum class DawTab(val title: String, val iconRes: Int) {
-    PADS("Pads", R.drawable.ic_tab_pads),
-    SEQUENCE("Secuencia", R.drawable.ic_tab_sequence),
-    PRESETS("Presets", R.drawable.ic_tab_presets),
+enum class DawTab(val title: String) {
+    PADS("Pads"),
+    RACK("Rack"),
+    SYNTH("Synth"),
+    PRESETS("Presets"),
 }
 
 @Composable
@@ -81,35 +99,59 @@ fun MainScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(DawPanelBackground),
             ) {
-                // Cabecera superior compacta: Branding + Login
+                // Barra superior de estado / branding DAW + Login
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .background(DawPanelHeader)
+                        .padding(horizontal = 12.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(DawLedGreen),
+                    )
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "SoundCraft DAW",
+                        text = "SOUNDCRAFT DAW",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Primary,
-                            fontSize = 17.sp,
+                            color = DawAccentOrange,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 1.sp,
+                            fontSize = 13.sp,
+                        ),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "STUDIO RACK",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 9.sp,
                         ),
                     )
 
                     Spacer(Modifier.weight(1f))
 
-                    IconButton(onClick = onNavigateToLogin) {
+                    IconButton(
+                        onClick = onNavigateToLogin,
+                        modifier = Modifier.size(48.dp),
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_btn_myplaces),
-                            contentDescription = "Iniciar sesión",
+                            contentDescription = "Sesión de usuario",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
@@ -123,38 +165,13 @@ fun MainScreen(
                     onStop = { sequencerViewModel.onEvent(SequencerEvent.Stop) },
                     onBpmChange = { sequencerViewModel.onEvent(SequencerEvent.BpmChanged(it)) },
                 )
-            }
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp,
-            ) {
-                DawTab.values().forEach { tab ->
-                    NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        icon = {
-                            Icon(
-                                painter = painterResource(tab.iconRes),
-                                contentDescription = tab.title,
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = tab.title,
-                                fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal,
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.Black,
-                            selectedTextColor = Primary,
-                            indicatorColor = Primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    )
-                }
+
+                // Pestañas superiores compactas estilo DAW (Pads | Rack | Synth | Presets)
+                DawTopTabBar(
+                    tabs = DawTab.values(),
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                )
             }
         },
     ) { innerPadding ->
@@ -171,11 +188,14 @@ fun MainScreen(
                         showTopBar = false,
                     )
                 }
-                DawTab.SEQUENCE -> {
+                DawTab.RACK -> {
                     SequencerScreen(
                         viewModel = sequencerViewModel,
                         showTransportBar = false,
                     )
+                }
+                DawTab.SYNTH -> {
+                    SynthPlaceholderScreen()
                 }
                 DawTab.PRESETS -> {
                     PresetsScreen(
@@ -184,6 +204,179 @@ fun MainScreen(
                         viewModel = presetsViewModel,
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Barra de pestañas superiores compactas estilo DAW de escritorio.
+ * Altura fija de 48dp garantizando accesibilidad y respuesta táctil.
+ */
+@Composable
+private fun DawTopTabBar(
+    tabs: Array<DawTab>,
+    selectedTab: DawTab,
+    onTabSelected: (DawTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(DawDarkBackground)
+            .border(width = 1.dp, color = DawPanelBorder),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        tabs.forEachIndexed { index, tab ->
+            val isSelected = tab == selectedTab
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable { onTabSelected(tab) }
+                    .background(
+                        if (isSelected) DawPanelBackground else Color.Transparent,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                // Acento luminoso inferior en pestaña activa
+                if (isSelected) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(DawAccentOrange),
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    // Mini LED de estado
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isSelected) DawAccentOrange else Color(0xFF4A5562),
+                            ),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = tab.title.uppercase(),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) DawAccentOrange else MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 0.8.sp,
+                            fontSize = 12.sp,
+                        ),
+                    )
+                }
+
+                // Divisor sutil entre pestañas
+                if (index < tabs.size - 1) {
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(22.dp)
+                            .align(Alignment.CenterEnd)
+                            .background(DawPanelBorder),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Placeholder para la pestaña SYNTH (reservado para Iteración 5B).
+ */
+@Composable
+private fun SynthPlaceholderScreen(modifier: Modifier = Modifier) {
+    DawPanel(
+        title = "SYNTH VST - VIRTUAL ANALOG",
+        modifier = modifier
+            .fillMaxSize()
+            .padding(8.dp),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(DawLcdBackground)
+                    .border(1.dp, DawPanelBorder, RoundedCornerShape(6.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "∿ ⎍",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = DawAccentOrange,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "SINTETIZADOR VIRTUAL (VST)",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = DawAccentOrange,
+                    letterSpacing = 1.sp,
+                ),
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "Módulo reservado para la Iteración 5B.\nIncluirá osciladores (Sine, Square, Saw), envolvente ADSR y filtro de corte resonante.",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                ),
+            )
+
+            Spacer(Modifier.height(28.dp))
+
+            // Perillas de hardware DAW de muestra
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DawKnob(
+                    value = 0.5f,
+                    onValueChange = {},
+                    label = "OSC 1",
+                )
+                DawKnob(
+                    value = 0.75f,
+                    onValueChange = {},
+                    label = "CUTOFF",
+                )
+                DawKnob(
+                    value = 0.35f,
+                    onValueChange = {},
+                    label = "RESONANCE",
+                )
+                DawKnob(
+                    value = 0.8f,
+                    onValueChange = {},
+                    label = "ATTACK",
+                )
             }
         }
     }
