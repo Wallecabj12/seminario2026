@@ -1,8 +1,19 @@
 package com.geovanivargas.planetamusica.ui.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+
+val DawShapes = Shapes(
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(6.dp),
+    large = RoundedCornerShape(6.dp),
+    extraLarge = RoundedCornerShape(8.dp),
+)
 
 private val DarkColorScheme = darkColorScheme(
     primary = Primary,
@@ -27,10 +38,10 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun SoundCraftTheme(content: @Composable () -> Unit) {
-    // Tema oscuro obligatorio – sin variante light
     MaterialTheme(
         colorScheme = DarkColorScheme,
         typography = Typography,
+        shapes = DawShapes,
         content = content,
     )
 }

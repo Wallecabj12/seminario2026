@@ -3,29 +3,38 @@ package com.geovanivargas.planetamusica.ui.theme
 import androidx.compose.ui.graphics.Color
 import com.geovanivargas.planetamusica.domain.sampler.PadCategory
 
-// Primary – cyan/teal for "sound wave" feel
-val Primary = Color(0xFF00E5FF)
-val OnPrimary = Color(0xFF003640)
-val PrimaryContainer = Color(0xFF004D5E)
-val OnPrimaryContainer = Color(0xFF97F0FF)
+// DAW Theme - Charcoal & Orange Accent
+val DawDarkBackground = Color(0xFF1E2328)
+val DawPanelBackground = Color(0xFF242A30)
+val DawPanelHeader = Color(0xFF1A1F24)
+val DawPanelBorder = Color(0xFF38404A)
+val DawSurfaceVariant = Color(0xFF2B3138)
+val DawLcdBackground = Color(0xFF121518)
+val DawAccentOrange = Color(0xFFFF8A1F)
+val DawLcdText = Color(0xFFFF8A1F)
+val DawLedGreen = Color(0xFF00E676)
+val DawLedRed = Color(0xFFFF3366)
 
-// Secondary – warm orange accent
+// Material 3 Color Scheme
+val Primary = DawAccentOrange
+val OnPrimary = Color(0xFF000000)
+val PrimaryContainer = Color(0xFF4A2800)
+val OnPrimaryContainer = Color(0xFFFFDCBE)
+
 val Secondary = Color(0xFFFFB74D)
 val OnSecondary = Color(0xFF422B00)
 val SecondaryContainer = Color(0xFF5F3F00)
 val OnSecondaryContainer = Color(0xFFFFDDB3)
 
-// Background / Surface
-val Background = Color(0xFF0E1114)
+val Background = DawDarkBackground
 val OnBackground = Color(0xFFE2E2E6)
-val Surface = Color(0xFF1A1C20)
+val Surface = DawPanelBackground
 val OnSurface = Color(0xFFE2E2E6)
-val SurfaceVariant = Color(0xFF262930)
-val OnSurfaceVariant = Color(0xFFC4C6CF)
+val SurfaceVariant = DawSurfaceVariant
+val OnSurfaceVariant = Color(0xFFB0B5BD)
 
-// Error
-val Error = Color(0xFFFFB4AB)
-val OnError = Color(0xFF690005)
+val Error = Color(0xFFFF5252)
+val OnError = Color(0xFF000000)
 val ErrorContainer = Color(0xFF93000A)
 val OnErrorContainer = Color(0xFFFFDAD6)
 
