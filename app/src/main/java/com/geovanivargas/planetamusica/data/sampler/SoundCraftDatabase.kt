@@ -9,6 +9,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.geovanivargas.planetamusica.data.presets.PresetDao
 import com.geovanivargas.planetamusica.data.presets.PresetEntity
 import com.geovanivargas.planetamusica.data.presets.PresetPadEntity
+import com.geovanivargas.planetamusica.data.synth.SynthPatchDao
+import com.geovanivargas.planetamusica.data.synth.SynthPatchEntity
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -51,15 +53,31 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `synth_patches` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `paramsJson` TEXT NOT NULL,
+                `isFactory` INTEGER NOT NULL DEFAULT 0
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 @Database(
-    entities = [PadEntity::class, PresetEntity::class, PresetPadEntity::class],
-    version = 3,
+    entities = [PadEntity::class, PresetEntity::class, PresetPadEntity::class, SynthPatchEntity::class],
+    version = 4,
     exportSchema = false,
 )
 abstract class SoundCraftDatabase : RoomDatabase() {
 
     abstract fun padDao(): PadDao
     abstract fun presetDao(): PresetDao
+    abstract fun synthPatchDao(): SynthPatchDao
 
     companion object {
         @Volatile
@@ -72,7 +90,7 @@ abstract class SoundCraftDatabase : RoomDatabase() {
                     SoundCraftDatabase::class.java,
                     "soundcraft_db",
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }
