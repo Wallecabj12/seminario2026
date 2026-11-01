@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,14 +37,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.geovanivargas.planetamusica.R
 import com.geovanivargas.planetamusica.domain.sequencer.StepPattern
-import com.geovanivargas.planetamusica.ui.components.DawKnob
-import com.geovanivargas.planetamusica.ui.components.DawPanel
 import com.geovanivargas.planetamusica.ui.presets.PresetsScreen
 import com.geovanivargas.planetamusica.ui.presets.PresetsViewModel
 import com.geovanivargas.planetamusica.ui.sampler.SamplerScreen
@@ -53,14 +49,13 @@ import com.geovanivargas.planetamusica.ui.sequencer.SequencerEvent
 import com.geovanivargas.planetamusica.ui.sequencer.SequencerScreen
 import com.geovanivargas.planetamusica.ui.sequencer.SequencerViewModel
 import com.geovanivargas.planetamusica.ui.sequencer.TransportBar
+import com.geovanivargas.planetamusica.ui.synth.SynthScreen
 import com.geovanivargas.planetamusica.ui.theme.DawAccentOrange
 import com.geovanivargas.planetamusica.ui.theme.DawDarkBackground
-import com.geovanivargas.planetamusica.ui.theme.DawLcdBackground
 import com.geovanivargas.planetamusica.ui.theme.DawLedGreen
 import com.geovanivargas.planetamusica.ui.theme.DawPanelBackground
 import com.geovanivargas.planetamusica.ui.theme.DawPanelBorder
 import com.geovanivargas.planetamusica.ui.theme.DawPanelHeader
-import com.geovanivargas.planetamusica.ui.theme.DawSurfaceVariant
 
 enum class DawTab(val title: String) {
     PADS("Pads"),
@@ -195,7 +190,7 @@ fun MainScreen(
                     )
                 }
                 DawTab.SYNTH -> {
-                    SynthPlaceholderScreen()
+                    SynthScreen()
                 }
                 DawTab.PRESETS -> {
                     PresetsScreen(
@@ -292,92 +287,3 @@ private fun DawTopTabBar(
     }
 }
 
-/**
- * Placeholder para la pestaña SYNTH (reservado para Iteración 5B).
- */
-@Composable
-private fun SynthPlaceholderScreen(modifier: Modifier = Modifier) {
-    DawPanel(
-        title = "SYNTH VST - VIRTUAL ANALOG",
-        modifier = modifier
-            .fillMaxSize()
-            .padding(8.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(DawLcdBackground)
-                    .border(1.dp, DawPanelBorder, RoundedCornerShape(6.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "∿ ⎍",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = DawAccentOrange,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                    ),
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "SINTETIZADOR VIRTUAL (VST)",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = DawAccentOrange,
-                    letterSpacing = 1.sp,
-                ),
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Módulo reservado para la Iteración 5B.\nIncluirá osciladores (Sine, Square, Saw), envolvente ADSR y filtro de corte resonante.",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp,
-                ),
-            )
-
-            Spacer(Modifier.height(28.dp))
-
-            // Perillas de hardware DAW de muestra
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                DawKnob(
-                    value = 0.5f,
-                    onValueChange = {},
-                    label = "OSC 1",
-                )
-                DawKnob(
-                    value = 0.75f,
-                    onValueChange = {},
-                    label = "CUTOFF",
-                )
-                DawKnob(
-                    value = 0.35f,
-                    onValueChange = {},
-                    label = "RESONANCE",
-                )
-                DawKnob(
-                    value = 0.8f,
-                    onValueChange = {},
-                    label = "ATTACK",
-                )
-            }
-        }
-    }
-}
