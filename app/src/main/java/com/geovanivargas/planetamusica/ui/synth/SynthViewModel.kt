@@ -129,14 +129,17 @@ class SynthViewModel(application: Application) : AndroidViewModel(application) {
             SynthEvent.HideSavePatchDialog -> _state.update { it.copy(showSavePatchDialog = false) }
             is SynthEvent.SavePatch -> savePatch(event.name)
             is SynthEvent.DeletePatch -> viewModelScope.launch { patchRepo.deletePatch(event.id) }
-            // ── Export ──
+            // ── Export & Soundpad Integration ──
             SynthEvent.ShowExportDialog -> prepareExport()
             SynthEvent.HideExportDialog -> _state.update { it.copy(showExportDialog = false) }
             is SynthEvent.ExportNameChanged -> _state.update { it.copy(exportName = event.name) }
             is SynthEvent.ExportNoteChanged -> _state.update { it.copy(exportNote = event.note.coerceIn(21, 108)) }
             is SynthEvent.ExportDurationChanged -> _state.update { it.copy(exportDurationSec = event.sec.coerceIn(0.2f, 4f)) }
             is SynthEvent.ExportPadSelected -> _state.update { it.copy(selectedExportPad = event.position) }
-            SynthEvent.ConfirmExport -> exportToPad()
+            is SynthEvent.ConfirmExport -> exportToPad(event.openSoundpadAfter)
+            SynthEvent.ShareAudioFile -> shareCurrentAudio()
+            SynthEvent.ShareFileConsumed -> _state.update { it.copy(shareFileTrigger = null) }
+            SynthEvent.NavigateToPadsConsumed -> _state.update { it.copy(navigateToPadsTrigger = null) }
             // ── General ──
             SynthEvent.ClearMessage -> _state.update { it.copy(message = null) }
         }
@@ -278,19 +281,21 @@ class SynthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val pads = padRepo.getAllPads().first()
             val freePads = pads.filter { !it.hasSound }.map { it.position }
+            val defaultTarget = freePads.firstOrNull() ?: _state.value.selectedExportPad ?: 0
             _state.update { it.copy(
                 showExportDialog = true,
+                allPads = pads,
                 availablePadPositions = freePads,
-                selectedExportPad = freePads.firstOrNull(),
+                selectedExportPad = defaultTarget,
                 storageUsedBytes = fileManager.getStorageUsedBytes(),
             ) }
         }
     }
 
-    private fun exportToPad() {
+    private fun exportToPad(openSoundpadAfter: Boolean) {
         val s = _state.value
         val targetPos = s.selectedExportPad ?: run {
-            _state.update { it.copy(message = "No hay pad libre disponible.") }
+            _state.update { it.copy(message = "Selecciona un pad de destino.") }
             return
         }
         val name = s.exportName.ifBlank { "Synth Sound" }
@@ -328,6 +333,9 @@ class SynthViewModel(application: Application) : AndroidViewModel(application) {
             val pads = padRepo.getAllPads().first()
             val pad = pads.find { it.position == targetPos }
             if (pad != null) {
+                pad.filePath?.let {
+                    fileManager.deleteFile(it)
+                }
                 val updated = pad.copy(
                     name = name,
                     filePath = file.absolutePath,
@@ -339,7 +347,38 @@ class SynthViewModel(application: Application) : AndroidViewModel(application) {
             _state.update { it.copy(
                 isExporting = false,
                 storageUsedBytes = fileManager.getStorageUsedBytes(),
-                message = "'$name' exportado al pad ${targetPos + 1}.",
+                message = "Instrumento '$name' asignado al Pad ${targetPos + 1}.",
+                navigateToPadsTrigger = if (openSoundpadAfter) targetPos else null,
+            ) }
+        }
+    }
+
+    private fun shareCurrentAudio() {
+        val s = _state.value
+        val name = s.exportName.ifBlank { s.currentPatchName.ifBlank { "Synth_Sound" } }
+        val durationMs = (s.exportDurationSec * 1000).toLong()
+
+        viewModelScope.launch {
+            _state.update { it.copy(isExporting = true) }
+
+            val samples = withContext(Dispatchers.Default) {
+                engine.render(s.params, s.exportNote, durationMs)
+            }
+
+            val ctx = getApplication<Application>()
+            val soundsDir = File(ctx.filesDir, FileManager.SOUNDS_DIR).also { it.mkdirs() }
+            val safeName = name.replace(" ", "_")
+            val file = File(soundsDir, "${safeName}_${System.currentTimeMillis()}.wav")
+
+            withContext(Dispatchers.IO) {
+                WavWriter.writeWavFile(file, samples)
+            }
+
+            _state.update { it.copy(
+                isExporting = false,
+                shareFileTrigger = file,
+                storageUsedBytes = fileManager.getStorageUsedBytes(),
+                message = "Audio '$safeName.wav' listo para compartir.",
             ) }
         }
     }

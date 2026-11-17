@@ -181,6 +181,7 @@ fun MainScreen(
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToPresets = { selectedTab = DawTab.PRESETS },
                         showTopBar = false,
+                        onNavigateToSynth = { selectedTab = DawTab.SYNTH },
                     )
                 }
                 DawTab.RACK -> {
@@ -190,7 +191,9 @@ fun MainScreen(
                     )
                 }
                 DawTab.SYNTH -> {
-                    SynthScreen()
+                    SynthScreen(
+                        onNavigateToPads = { selectedTab = DawTab.PADS },
+                    )
                 }
                 DawTab.PRESETS -> {
                     PresetsScreen(

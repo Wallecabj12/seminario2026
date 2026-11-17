@@ -1,7 +1,9 @@
 package com.geovanivargas.planetamusica.ui.synth
 
 import com.geovanivargas.planetamusica.audio.synth.*
+import com.geovanivargas.planetamusica.domain.sampler.Pad
 import com.geovanivargas.planetamusica.domain.synth.SynthPatch
+import java.io.File
 
 data class SynthUiState(
     val params: SynthParams = SynthParams(),
@@ -22,10 +24,19 @@ data class SynthUiState(
     val exportName: String = "Synth Sound",
     val exportNote: Int = 60,
     val exportDurationSec: Float = 1.0f,
+    val allPads: List<Pad> = emptyList(),
     val availablePadPositions: List<Int> = emptyList(),
     val selectedExportPad: Int? = null,
     val storageUsedBytes: Long = 0L,
+    val shareFileTrigger: File? = null,
+    val navigateToPadsTrigger: Int? = null,
 ) {
+    fun noteName(note: Int): String {
+        val names = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        val octave = (note / 12) - 1
+        return "${names[note % 12]}$octave"
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SynthUiState) return false
@@ -47,9 +58,12 @@ data class SynthUiState(
                 exportName == other.exportName &&
                 exportNote == other.exportNote &&
                 exportDurationSec == other.exportDurationSec &&
+                allPads == other.allPads &&
                 availablePadPositions == other.availablePadPositions &&
                 selectedExportPad == other.selectedExportPad &&
-                storageUsedBytes == other.storageUsedBytes
+                storageUsedBytes == other.storageUsedBytes &&
+                shareFileTrigger == other.shareFileTrigger &&
+                navigateToPadsTrigger == other.navigateToPadsTrigger
     }
 
     override fun hashCode(): Int = params.hashCode() + currentPatchName.hashCode()
@@ -117,14 +131,17 @@ sealed interface SynthEvent {
     data object HideSavePatchDialog : SynthEvent
     data class SavePatch(val name: String) : SynthEvent
     data class DeletePatch(val id: Long) : SynthEvent
-    // Export
+    // Export & Soundpad Integration
     data object ShowExportDialog : SynthEvent
     data object HideExportDialog : SynthEvent
     data class ExportNameChanged(val name: String) : SynthEvent
     data class ExportNoteChanged(val note: Int) : SynthEvent
     data class ExportDurationChanged(val sec: Float) : SynthEvent
     data class ExportPadSelected(val position: Int) : SynthEvent
-    data object ConfirmExport : SynthEvent
+    data class ConfirmExport(val openSoundpadAfter: Boolean = false) : SynthEvent
+    data object ShareAudioFile : SynthEvent
+    data object ShareFileConsumed : SynthEvent
+    data object NavigateToPadsConsumed : SynthEvent
     // General
     data object ClearMessage : SynthEvent
 }

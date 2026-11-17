@@ -38,16 +38,32 @@ import com.geovanivargas.planetamusica.ui.theme.*
 @Composable
 fun SynthScreen(
     modifier: Modifier = Modifier,
+    onNavigateToPads: (padPosition: Int?) -> Unit = {},
     viewModel: SynthViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     LaunchedEffect(state.message) {
         state.message?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.onEvent(SynthEvent.ClearMessage)
+        }
+    }
+
+    LaunchedEffect(state.shareFileTrigger) {
+        state.shareFileTrigger?.let { file ->
+            AudioExportHelper.shareAudio(context, file)
+            viewModel.onEvent(SynthEvent.ShareFileConsumed)
+        }
+    }
+
+    LaunchedEffect(state.navigateToPadsTrigger) {
+        state.navigateToPadsTrigger?.let { padPos ->
+            viewModel.onEvent(SynthEvent.NavigateToPadsConsumed)
+            onNavigateToPads(padPos)
         }
     }
 
@@ -127,15 +143,33 @@ fun SynthScreen(
             // ── Keyboard ──
             SynthKeyboard(state.selectedOctave, viewModel::onEvent)
 
-            // ── Export button ──
-            Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // ── Botones de Integración Soundpad y Exportación ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Button(
                     onClick = { viewModel.onEvent(SynthEvent.ShowExportDialog) },
-                    modifier = Modifier.weight(1f).height(48.dp),
+                    modifier = Modifier
+                        .weight(1.3f)
+                        .height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DawAccentOrange),
                     shape = RoundedCornerShape(6.dp),
                 ) {
-                    Text("EXPORTAR A PAD", fontWeight = FontWeight.Bold, color = Color.Black)
+                    Text("INTEGRAR CON SOUNDPAD", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+
+                OutlinedButton(
+                    onClick = { viewModel.onEvent(SynthEvent.ShareAudioFile) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DawAccentOrange),
+                ) {
+                    Text("Exportar Audio", color = DawAccentOrange, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -152,7 +186,7 @@ fun SynthScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = DawAccentOrange)
                     Spacer(Modifier.height(8.dp))
-                    Text("Exportando...", color = DawAccentOrange, fontWeight = FontWeight.Bold)
+                    Text("Procesando audio...", color = DawAccentOrange, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -724,63 +758,213 @@ private fun SavePatchDialog(currentName: String, onEvent: (SynthEvent) -> Unit) 
 }
 
 @Composable
-private fun ExportDialog(state: SynthUiState, onEvent: (SynthEvent) -> Unit) {
+private fun ExportDialog(
+    state: SynthUiState,
+    onEvent: (SynthEvent) -> Unit,
+) {
+    fun midiToName(note: Int): String {
+        val names = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+        val oct = (note / 12) - 1
+        return "${names[note % 12]}$oct"
+    }
+
     AlertDialog(
         onDismissRequest = { onEvent(SynthEvent.HideExportDialog) },
-        title = { Text("EXPORTAR A PAD", fontWeight = FontWeight.Bold, color = DawAccentOrange) },
+        title = {
+            Text(
+                text = "ASIGNAR AL SOUNDPAD",
+                fontWeight = FontWeight.Bold,
+                color = DawAccentOrange,
+                fontFamily = FontFamily.Monospace,
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = state.exportName, onValueChange = { onEvent(SynthEvent.ExportNameChanged(it)) },
-                    label = { Text("Nombre") }, singleLine = true,
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedTextField(
+                    value = state.exportName,
+                    onValueChange = { onEvent(SynthEvent.ExportNameChanged(it)) },
+                    label = { Text("Nombre del instrumento") },
+                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = DawAccentOrange, cursorColor = DawAccentOrange))
+                        focusedBorderColor = DawAccentOrange,
+                        cursorColor = DawAccentOrange,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-                Text("Nota MIDI: ${state.exportNote}", style = MaterialTheme.typography.bodySmall)
-                Slider(value = state.exportNote.toFloat(), onValueChange = { onEvent(SynthEvent.ExportNoteChanged(it.toInt())) },
-                    valueRange = 21f..108f, steps = 87,
-                    colors = SliderDefaults.colors(thumbColor = DawAccentOrange, activeTrackColor = DawAccentOrange))
+                // Nota musical
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Nota musical:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "${midiToName(state.exportNote)} (MIDI ${state.exportNote})",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = DawAccentOrange,
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                    )
+                }
+                Slider(
+                    value = state.exportNote.toFloat(),
+                    onValueChange = { onEvent(SynthEvent.ExportNoteChanged(it.toInt())) },
+                    valueRange = 21f..108f,
+                    steps = 87,
+                    colors = SliderDefaults.colors(thumbColor = DawAccentOrange, activeTrackColor = DawAccentOrange),
+                )
 
-                Text("Duración: %.1f s".format(state.exportDurationSec), style = MaterialTheme.typography.bodySmall)
-                Slider(value = state.exportDurationSec, onValueChange = { onEvent(SynthEvent.ExportDurationChanged(it)) },
+                // Duración
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Duración:", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("%.1f s".format(state.exportDurationSec), style = MaterialTheme.typography.bodySmall, color = DawAccentOrange)
+                }
+                Slider(
+                    value = state.exportDurationSec,
+                    onValueChange = { onEvent(SynthEvent.ExportDurationChanged(it)) },
                     valueRange = 0.2f..4f,
-                    colors = SliderDefaults.colors(thumbColor = DawAccentOrange, activeTrackColor = DawAccentOrange))
+                    colors = SliderDefaults.colors(thumbColor = DawAccentOrange, activeTrackColor = DawAccentOrange),
+                )
 
-                if (state.availablePadPositions.isEmpty()) {
-                    Text("No hay pads libres.", color = DawLedRed)
-                } else {
-                    Text("Pad destino:", style = MaterialTheme.typography.bodySmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        state.availablePadPositions.forEach { pos ->
-                            val sel = state.selectedExportPad == pos
-                            Box(
-                                Modifier.size(40.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(if (sel) DawAccentOrange.copy(alpha = 0.3f) else DawSurfaceVariant)
-                                    .border(1.dp, if (sel) DawAccentOrange else DawPanelBorder, RoundedCornerShape(4.dp))
-                                    .clickable { onEvent(SynthEvent.ExportPadSelected(pos)) },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text("${pos + 1}", fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (sel) DawAccentOrange else MaterialTheme.colorScheme.onSurface)
+                // Selector de Pad (Matriz completa 1 a 16)
+                Text(
+                    text = "Selecciona el Pad de destino (1 a 16):",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                // Renderizamos la cuadrícula 4x4 de pads del soundpad
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (row in 0 until 4) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            for (col in 0 until 4) {
+                                val pos = row * 4 + col
+                                val pad = state.allPads.find { it.position == pos }
+                                val isSelected = state.selectedExportPad == pos
+                                val hasAudio = pad?.hasSound == true
+                                val padName = pad?.name?.take(7) ?: "[Libre]"
+                                val catColor = pad?.category?.accentColor() ?: DawPanelBorder
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(46.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(
+                                            if (isSelected) DawAccentOrange.copy(alpha = 0.35f)
+                                            else if (hasAudio) DawSurfaceVariant
+                                            else DawDarkBackground
+                                        )
+                                        .border(
+                                            width = if (isSelected) 2.dp else 1.dp,
+                                            color = if (isSelected) DawAccentOrange else if (hasAudio) catColor.copy(alpha = 0.7f) else DawPanelBorder,
+                                            shape = RoundedCornerShape(4.dp),
+                                        )
+                                        .clickable { onEvent(SynthEvent.ExportPadSelected(pos)) }
+                                        .padding(2.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = "%02d".format(pos + 1),
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) DawAccentOrange else Color.Gray,
+                                            ),
+                                        )
+                                        Text(
+                                            text = if (hasAudio) padName else "Libre",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 8.sp,
+                                                color = if (isSelected) Color.White else if (hasAudio) Color(0xFFD0D5DD) else Color(0xFF707780),
+                                            ),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
+                val targetPad = state.allPads.find { it.position == state.selectedExportPad }
+                if (targetPad != null) {
+                    val statusText = if (targetPad.hasSound) {
+                        "⚠️ Reemplazará: '${targetPad.name}' (${targetPad.category.label})"
+                    } else {
+                        "✓ Pad disponible (${targetPad.position + 1})"
+                    }
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (targetPad.hasSound) Color(0xFFFFB74D) else DawLedGreen,
+                        ),
+                    )
+                }
+
                 val usedMb = state.storageUsedBytes / (1024.0 * 1024.0)
-                Text("Almacenamiento: %.1f / 50 MB".format(usedMb),
-                    style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                Text(
+                    text = "Almacenamiento: %.1f / 50 MB".format(usedMb),
+                    style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                )
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = { onEvent(SynthEvent.ConfirmExport) },
-                enabled = state.availablePadPositions.isNotEmpty() && state.selectedExportPad != null,
-            ) { Text("Exportar", color = DawAccentOrange) }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Button(
+                    onClick = { onEvent(SynthEvent.ConfirmExport(openSoundpadAfter = true)) },
+                    colors = ButtonDefaults.buttonColors(containerColor = DawAccentOrange),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(4.dp),
+                ) {
+                    Text("Asignar y Probar en Soundpad", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = { onEvent(SynthEvent.ConfirmExport(openSoundpadAfter = false)) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(4.dp),
+                    ) {
+                        Text("Asignar", fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = { onEvent(SynthEvent.ShareAudioFile) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(4.dp),
+                    ) {
+                        Text("Compartir", fontSize = 12.sp, color = DawAccentOrange)
+                    }
+                }
+            }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(SynthEvent.HideExportDialog) }) { Text("Cancelar") }
+            TextButton(onClick = { onEvent(SynthEvent.HideExportDialog) }) {
+                Text("Cancelar")
+            }
         },
         containerColor = DawPanelBackground,
     )

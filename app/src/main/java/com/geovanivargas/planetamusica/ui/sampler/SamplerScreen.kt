@@ -55,6 +55,7 @@ fun SamplerScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToPresets: () -> Unit,
     showTopBar: Boolean = true,
+    onNavigateToSynth: (padId: Int?) -> Unit = {},
     viewModel: SamplerViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
@@ -75,6 +76,13 @@ fun SamplerScreen(
             pendingPadId = padId
             viewModel.onEvent(SamplerEvent.FilePickerConsumed)
             filePicker.launch(arrayOf("audio/mpeg", "audio/wav", "audio/x-wav"))
+        }
+    }
+
+    LaunchedEffect(state.requestNavigateToSynthForPadId) {
+        state.requestNavigateToSynthForPadId?.let { padId ->
+            viewModel.onEvent(SamplerEvent.NavigateToSynthConsumed)
+            onNavigateToSynth(padId)
         }
     }
 
